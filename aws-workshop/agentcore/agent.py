@@ -97,7 +97,7 @@ def create_agent() -> Agent:
     """Create and return the Strands Agent configured for this workshop."""
     region = os.environ.get("AWS_REGION", os.environ.get("AWS_REGION_NAME", "us-east-1"))
     model_id = os.environ.get(
-        "BEDROCK_MODEL_ID", "anthropic.claude-haiku-4-5-20251001-v1:0"
+        "BEDROCK_MODEL_ID", "us.anthropic.claude-3-5-haiku-20241022-v1:0"
     )
 
     model = BedrockModel(
