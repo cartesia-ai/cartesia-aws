@@ -29,6 +29,8 @@ COPY agentcore/__init__.py /app/agentcore/__init__.py
 
 # AgentCore Runtime expects the server on port 8080
 ENV PORT=8080
+# Force unbuffered stdout/stderr so logs reach CloudWatch
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8080
 
 # Health check for container orchestration

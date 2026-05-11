@@ -15,6 +15,8 @@ The agent:
 import asyncio
 import json
 import os
+import time
+import traceback
 from typing import Any, Dict
 
 import boto3
@@ -135,7 +137,8 @@ def create_app():
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
-                self.wfile.write(b'{"status": "healthy"}')
+                body = json.dumps({"status": "Healthy", "time_of_last_update": int(time.time())})
+                self.wfile.write(body.encode("utf-8"))
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -148,18 +151,24 @@ def create_app():
                 try:
                     payload = json.loads(body)
                     prompt = payload.get("input", {}).get("prompt", payload.get("prompt", ""))
-                    session_id = payload.get("session_id", "default")
+                    session_id = (
+                        self.headers.get("X-Amzn-Bedrock-AgentCore-Runtime-Session-Id")
+                        or payload.get("session_id")
+                        or "default"
+                    )
 
                     # Invoke agent
                     result = agent(prompt)
                     response_text = str(result)
 
                     self.send_response(200)
-                    self.send_header("Content-Type", "text/plain")
+                    self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(response_text.encode("utf-8"))
+                    self.wfile.write(json.dumps({"response": response_text, "status": "success"}).encode("utf-8"))
 
                 except Exception as e:
+                    print(f"[invocations] ERROR: {e}", flush=True)
+                    traceback.print_exc()
                     self.send_response(500)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
@@ -170,8 +179,7 @@ def create_app():
                 self.end_headers()
 
         def log_message(self, format, *args):
-            # Suppress default HTTP logs; use structured logging in production
-            pass
+            print(format % args, flush=True)
 
     return AgentCoreHandler
 

@@ -21,7 +21,8 @@ import time
 
 import boto3
 
-AGENT_NAME = "cartesia-workshop-agent"
+# AgentCore requires names match [a-zA-Z][a-zA-Z0-9_]{0,47} — no hyphens.
+AGENT_NAME = "cartesia_workshop_agent"
 DEFAULT_REGION = os.environ.get("AWS_REGION", os.environ.get("AWS_REGION_NAME", "us-west-2"))
 
 
@@ -70,8 +71,8 @@ def create_runtime(region: str, role_arn: str, image_uri: str, kb_id: str = None
         status_resp = control.get_agent_runtime(agentRuntimeId=runtime_id)
         status = status_resp.get("status", "UNKNOWN")
         print(f"   [{i*5}s] Status: {status}")
-        if status == "ACTIVE":
-            print(f"\n✅ Runtime is ACTIVE and ready to receive requests.")
+        if status in ("READY", "ACTIVE"):
+            print(f"\n✅ Runtime is {status} and ready to receive requests.")
             print(f"\nTo invoke:")
             print(f"  python -m agentcore.invoke --arn {runtime_arn} --prompt 'Hello'")
             return runtime_arn

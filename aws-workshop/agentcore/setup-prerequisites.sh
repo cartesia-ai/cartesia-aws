@@ -65,7 +65,11 @@ POLICY_DOC=$(cat <<EOF
         "bedrock:Converse",
         "bedrock:ConverseStream"
       ],
-      "Resource": "arn:aws:bedrock:${REGION}::foundation-model/*"
+      "Resource": [
+        "arn:aws:bedrock:${REGION}::foundation-model/*",
+        "arn:aws:bedrock:*::foundation-model/*",
+        "arn:aws:bedrock:${REGION}:${ACCOUNT_ID}:inference-profile/*"
+      ]
     },
     {
       "Sid": "BedrockKnowledgeBase",
