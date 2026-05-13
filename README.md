@@ -42,24 +42,7 @@ The `pronunciation_map` parameter lets you override how specific words are spoke
 
 > **Important**: Alias values are read as plain text — IPA phonetic notation is not interpreted as phoneme directives. Use phonetic respellings instead (e.g. `"Nguyen": "Win"`, `"GIF": "jif"`).
 
-**Byte limit**: The combined UTF-8 byte size of all keys and values must not exceed 16KB. This bounds the worst-case expansion of the transcript after substitutions are applied.
-
-#### Example
-
-```json
-{
-    "context_id": "my-request-001",
-    "transcript": "Welcome to Cartesia. Our Sonic 3 model delivers ultra-low latency TTS via the API.",
-    "language": "en",
-    "voice": { "mode": "id", "id": "bf0a246a-8642-498a-9950-80c35e9276b5" },
-    "output_format": { "container": "raw", "sample_rate": 44100, "encoding": "pcm_f32le" },
-    "pronunciation_map": {
-        "Cartesia": "Car-TEE-zhuh",
-        "Sonic": "SAH-nik",
-        "API": "A-P-I"
-    }
-}
-```
+**Byte limit**: The combined UTF-8 byte size of all keys and values must not exceed 16KB.
 
 ### Data Sample
 
