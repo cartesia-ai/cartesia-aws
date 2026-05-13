@@ -25,8 +25,24 @@ The response streaming endpoint takes in a JSON object as the input that specifi
 | **add_timestamps** | Whether to include word-level timestamps in the output: https://docs.cartesia.ai/api-reference/tts/sse#body-add-timestamps | `boolean` | ❌ No |
 | **add_phoneme_timestamps** | Whether to include phoneme-level timestamps in the output: https://docs.cartesia.ai/api-reference/tts/sse#body-add-phoneme-timestamps | `boolean` | ❌ No |
 | **use_normalized_timestamps** | Whether timestamps should be normalized (0–1 range): https://docs.cartesia.ai/api-reference/tts/sse#body-use-normalized-timestamps | `boolean` | ❌ No |
+| **pronunciation_map** | A dictionary mapping words or phrases to plain-text pronunciations. When the model encounters a key in the transcript, it speaks the alias value instead. Useful for brand names, proper nouns, acronyms, and domain-specific terms. Maximum total size: 16KB (sum of all key and value bytes in UTF-8). See [Pronunciation Dictionary](#pronunciation-dictionary) for details and examples. | `object` | ❌ No |
 
 
+
+### Pronunciation Dictionary
+
+The `pronunciation_map` parameter lets you override how specific words are spoken. This is useful for:
+
+- **Proper nouns and brand names** that the model may mispronounce (e.g. `"Nguyen"`, `"Xiaomi"`)
+- **Acronyms and initialisms** where you want explicit letter-by-letter or expanded pronunciation (e.g. `"AWS"`, `"SQL"`)
+- **Domain-specific terms** such as medical, legal, or technical vocabulary
+- **IVR and contact center scripts** where consistent, predictable pronunciation is critical
+
+**How it works**: Each key is a word or phrase that may appear in the transcript. When the model finds an exact match, it speaks the alias value in place of the original text. Matching is case-sensitive.
+
+> **Important**: Alias values are read as plain text — IPA phonetic notation is not interpreted as phoneme directives. Use phonetic respellings instead (e.g. `"Nguyen": "Win"`, `"GIF": "jif"`).
+
+**Byte limit**: The combined UTF-8 byte size of all keys and values must not exceed 16KB.
 
 ### Data Sample
 
