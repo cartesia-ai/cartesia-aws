@@ -50,6 +50,9 @@ Pass through the caller's messages and return the agent's responses verbatim."""
 
 INTRODUCTION = "Thanks for calling Northwind Mutual claims. I can help you start a claim or answer questions about your policy. What's going on today?"
 
+# Sentinel value that signals the outer agent to hang up the call
+END_CALL_SIGNAL = "__END_CALL__"
+
 
 # ─── AgentCore Tool (bridges Cartesia Line to AgentCore Runtime) ──────────────
 
@@ -71,15 +74,24 @@ async def ask_agentcore_agent(
     session_id = getattr(ctx, "call_id", str(uuid.uuid4()))
 
     try:
-        response = await asyncio.to_thread(
+        result = await asyncio.to_thread(
             invoke_agent,
             agent_runtime_arn=AGENTCORE_RUNTIME_ARN,
             prompt=message,
             session_id=session_id,
             region=AWS_REGION,
         )
-        logger.info(f"AgentCore response: {response[:100]}...")
-        return response
+
+        response_text = result["response"]
+        logger.info(f"AgentCore response: {response_text[:100]}...")
+
+        # If the inner agent triggered end_call, append the sentinel so the
+        # outer voice agent's system prompt can detect it and hang up
+        if result.get("end_call"):
+            logger.info("AgentCore agent signaled end_call")
+            return f"{response_text}\n{END_CALL_SIGNAL}"
+
+        return response_text
     except Exception as e:
         logger.exception("AgentCore invocation failed")
         return f"I'm having trouble connecting to our system. Please hold. Error: {e}"
@@ -116,7 +128,8 @@ async def get_agent(env: AgentEnv, call_request: CallRequest):
                 "You are a voice call router. When the caller speaks, ALWAYS call the "
                 "ask_agentcore_agent tool with their message. Speak the tool's response "
                 "verbatim to the caller. Never answer questions yourself — always use the tool. "
-                "When the tool returns '__END_CALL__', say goodbye and call end_call."
+                f"When the tool's response contains '{END_CALL_SIGNAL}', speak only the text "
+                "before that marker, then immediately call end_call to hang up."
             ),
             fallback_introduction=INTRODUCTION,
         ),

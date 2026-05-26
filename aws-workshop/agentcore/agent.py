@@ -96,7 +96,7 @@ def end_call() -> str:
 
 
 def create_agent() -> Agent:
-    """Create and return the Strands Agent configured for this workshop."""
+    """Create and return a fresh Strands Agent configured for this workshop."""
     region = os.environ.get("AWS_REGION", os.environ.get("AWS_REGION_NAME", "us-east-1"))
     model_id = os.environ.get(
         "BEDROCK_MODEL_ID", "us.anthropic.claude-3-5-haiku-20241022-v1:0"
@@ -122,14 +122,16 @@ def create_agent() -> Agent:
 #   POST /invocations  → agent response
 
 
-def create_app():
-    """Create the Express-like HTTP app for AgentCore Runtime."""
-    from http.server import HTTPServer, BaseHTTPRequestHandler
-    import threading
+# End-call sentinel — included in response so the outer voice agent can detect hangup
+END_CALL_SENTINEL = "__END_CALL__"
 
-    agent = create_agent()
-    # Store conversation history per session
-    sessions: Dict[str, list] = {}
+
+def create_app():
+    """Create the HTTP app for AgentCore Runtime with per-session agent isolation."""
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+
+    # Per-session agent instances to prevent conversation bleed between callers
+    sessions: Dict[str, Agent] = {}
 
     class AgentCoreHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -157,14 +159,36 @@ def create_app():
                         or "default"
                     )
 
+                    # Get or create a per-session agent for conversation isolation
+                    if session_id not in sessions:
+                        sessions[session_id] = create_agent()
+                    agent = sessions[session_id]
+
                     # Invoke agent
                     result = agent(prompt)
                     response_text = str(result)
 
+                    # Check if end_call was triggered by looking for sentinel in the
+                    # agent's tool output. The agent consumes __END_CALL__ and produces
+                    # a natural-language goodbye, so we append the sentinel to signal
+                    # the outer voice agent to hang up.
+                    end_call_triggered = END_CALL_SENTINEL in str(result)
+
+                    response_body = {
+                        "response": response_text,
+                        "status": "success",
+                    }
+                    if end_call_triggered:
+                        response_body["end_call"] = True
+
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(json.dumps({"response": response_text, "status": "success"}).encode("utf-8"))
+                    self.wfile.write(json.dumps(response_body).encode("utf-8"))
+
+                    # Clean up session after call ends
+                    if end_call_triggered and session_id in sessions:
+                        del sessions[session_id]
 
                 except Exception as e:
                     print(f"[invocations] ERROR: {e}", flush=True)

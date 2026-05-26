@@ -25,9 +25,9 @@ def invoke_agent(
     prompt: str,
     session_id: str = None,
     region: str = None,
-) -> str:
+) -> dict:
     """
-    Invoke the AgentCore Runtime agent and return the text response.
+    Invoke the AgentCore Runtime agent and return the parsed response.
 
     Args:
         agent_runtime_arn: ARN of the deployed AgentCore Runtime
@@ -36,7 +36,9 @@ def invoke_agent(
         region: AWS region (defaults to AWS_REGION env var)
 
     Returns:
-        Agent's text response
+        Dict with keys:
+          - "response": Agent's text response
+          - "end_call": True if the agent signaled call termination
     """
     if region is None:
         region = os.environ.get("AWS_REGION", os.environ.get("AWS_REGION_NAME", "us-west-2"))
@@ -58,9 +60,21 @@ def invoke_agent(
         qualifier="DEFAULT",
     )
 
-    # Read the streaming response
-    body = response["response"].read()
-    return body.decode("utf-8")
+    # Read the streaming response and extract from JSON envelope
+    raw = response["response"].read().decode("utf-8")
+
+    # The /invocations endpoint returns:
+    #   {"response": "...", "status": "success", "end_call": true/false}
+    # Extract the response text so callers don't receive raw JSON
+    try:
+        parsed = json.loads(raw)
+        return {
+            "response": parsed["response"],
+            "end_call": parsed.get("end_call", False),
+        }
+    except (json.JSONDecodeError, KeyError):
+        # Fall back to raw text if response format is unexpected
+        return {"response": raw, "end_call": False}
 
 
 def main():
@@ -77,14 +91,16 @@ def main():
     print(f"Prompt: {args.prompt}")
     print("---")
 
-    response = invoke_agent(
+    result = invoke_agent(
         agent_runtime_arn=args.arn,
         prompt=args.prompt,
         session_id=args.session_id,
         region=args.region,
     )
 
-    print(f"Response: {response}")
+    print(f"Response: {result['response']}")
+    if result["end_call"]:
+        print("[Call ended by agent]")
 
 
 if __name__ == "__main__":
