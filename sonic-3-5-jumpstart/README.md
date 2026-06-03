@@ -6,7 +6,7 @@ For a step by step guide to create your first Sonic 3.5 Inference endpoint on Sa
 
 ### Inference Setup
 
-Sonic 3.5 supports only real time inference on Sagemaker. Please select `ml.g6e.xlarge` or `ml.g7e.2xlarge` as your inference endpoint instance type. Each instance is capable of serving 10 concurrent requests. In order to get the best performance, Sagemaker suggests that you reuse the client-to-SageMaker connection, as it can save the time to re-establish the connection. In boto3, you can configure max_pool_connections . Multiple requests will reuse the connections, which avoids the cost of establishing new TCP/TLS connections for each request.
+Sonic 3.5 supports only real time inference on Sagemaker. Please select `ml.g6e.xlarge` as your inference endpoint instance type. Each instance is capable of serving 10 concurrent requests. In order to get the best performance, Sagemaker suggests that you reuse the client-to-SageMaker connection, as it can save the time to re-establish the connection. In boto3, you can configure max_pool_connections . Multiple requests will reuse the connections, which avoids the cost of establishing new TCP/TLS connections for each request.
 
 ###  Input Summary
 
