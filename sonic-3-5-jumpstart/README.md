@@ -71,7 +71,7 @@ The `pronunciation_map` parameter lets you override how specific words are spoke
     "output_format": {
         "container": "raw",
         "sample_rate": 44100,
-        "encoding": "pcm"
+        "encoding": "pcm_s16le"
     }
     "voice_id": {
         "mode": "id",
