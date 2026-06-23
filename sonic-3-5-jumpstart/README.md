@@ -25,7 +25,7 @@ The response streaming endpoint takes in a JSON object as the input that specifi
 | **add_timestamps** | Whether to include word-level timestamps in the output: https://docs.cartesia.ai/api-reference/tts/sse#body-add-timestamps | `boolean` | ❌ No |
 | **add_phoneme_timestamps** | Whether to include phoneme-level timestamps in the output: https://docs.cartesia.ai/api-reference/tts/sse#body-add-phoneme-timestamps | `boolean` | ❌ No |
 | **use_normalized_timestamps** | Whether timestamps should be normalized (0–1 range): https://docs.cartesia.ai/api-reference/tts/sse#body-use-normalized-timestamps | `boolean` | ❌ No |
-| **pronunciation_map** | A dictionary mapping words or phrases to plain-text pronunciations. When the model encounters a key in the transcript, it speaks the alias value instead. Useful for brand names, proper nouns, acronyms, and domain-specific terms. Maximum total size: 16KB (sum of all key and value bytes in UTF-8). See [Pronunciation Dictionary](#pronunciation-dictionary) for details and examples. | `object` | ❌ No |
+| **pronunciation_map** | A dictionary mapping words or phrases to plain-text pronunciations: https://docs.cartesia.ai/build-with-cartesia/capability-guides/custom-pronunciations. Maximum total size: 16KB (sum of all key and value bytes in UTF-8). See [Pronunciation Dictionary](#pronunciation-dictionary) for details and examples. | `object` | ❌ No |
 
 
 
