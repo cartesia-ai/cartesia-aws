@@ -1,7 +1,7 @@
 [project]
 name = "aws-workshop"
-version = "0.1.0"
-description = "Workshop: Cartesia Line voice agent on AWS Bedrock"
+version = "0.2.0"
+description = "Workshop: Cartesia Line voice agent on AWS — with AgentCore Runtime expansion"
 requires-python = ">=3.10"
 dependencies = [
     "cartesia-line==0.2.10",
@@ -9,5 +9,10 @@ dependencies = [
     "loguru>=0.7.0",
 ]
 
+[project.optional-dependencies]
+agentcore = [
+    "strands-agents>=1.0.0",
+]
+
 [tool.setuptools]
-py-modules = ["main"]
+py-modules = ["main", "main_agentcore"]
