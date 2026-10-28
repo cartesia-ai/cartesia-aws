@@ -139,92 +139,48 @@ A **phoneme timestamp event** provides timing data at the phoneme level, typical
 
 ### Continuations
 
-Continue speech across requests by sending the previous response's `history` token with the next text segment.
+Use the response-streaming endpoint to receive continuation history.
 
-Set `include_history: true` on the first request and read `history` from the final `done` event. Send that string unchanged as `history` on the next request, with only the new text in `transcript`. Keep the same model and `voice.id`, and carry forward the newest token for each subsequent request. Supplying `history` also requests a new token, even if you omit `include_history`.
+Set `include_history` to `true` on your first request:
 
-Each request has its own `context_id`; reusing a context ID alone does not continue speech. The token carries the audio conditioning state, so requests can reach different replicas of your deployment. You do not need session affinity. Continuation uses a rolling audio context, rather than retaining an entire conversation indefinitely.
-
-Tokens expire after 24 hours by default, measured from issuance (`TTS_CONTINUATION_TTL_SECONDS` controls the server setting). An expired token, an invalid token, or one that does not match the model or voice is discarded and generation proceeds without its history. A successful continuation-enabled generation returns a fresh token. Omitting both fields preserves the existing response contract without a history token.
-
-Treat tokens as opaque application data: store and forward them without modifying them. Keep them private along with the generated audio.
-
-Install `boto3` with `pip install boto3` and configure AWS credentials and a region with permission to invoke your endpoint. Set `SAGEMAKER_ENDPOINT_NAME` to its name and `VOICE_ID` to a voice available on the deployment:
-
-```bash
-export SAGEMAKER_ENDPOINT_NAME='your-endpoint-name'
-export VOICE_ID='bf0a246a-8642-498a-9950-80c35e9276b5'
+```json
+{
+    "context_id": "part-1",
+    "transcript": "The old lighthouse keeper climbed the stairs.",
+    "language": "en",
+    "voice": {
+        "mode": "id",
+        "id": "bf0a246a-8642-498a-9950-80c35e9276b5"
+    },
+    "output_format": {
+        "container": "raw",
+        "encoding": "pcm_s16le",
+        "sample_rate": 44100
+    },
+    "include_history": true
+}
 ```
 
-The example buffers newline-delimited JSON events across SageMaker `PayloadPart` boundaries, captures the final history token, and uses it on a second request. It saves two mono, 44.1 kHz, 16-bit PCM files; play them consecutively.
+Read `history` from the final `done` event:
 
-```python
-import base64
-import json
-import os
-import uuid
-from pathlib import Path
-
-import boto3
-
-runtime = boto3.client("sagemaker-runtime")
-
-
-def generate(transcript, history=None):
-    body = {
-        "context_id": str(uuid.uuid4()),
-        "transcript": transcript,
-        "language": "en",
-        "voice": {
-            "mode": "id",
-            "id": os.environ["VOICE_ID"],
-        },
-        "output_format": {
-            "container": "raw",
-            "encoding": "pcm_s16le",
-            "sample_rate": 44100,
-        },
-        "include_history": True,
-    }
-    if history is not None:
-        body["history"] = history
-    response = runtime.invoke_endpoint_with_response_stream(
-        EndpointName=os.environ["SAGEMAKER_ENDPOINT_NAME"],
-        ContentType="application/json",
-        Accept="text/event-stream",
-        Body=json.dumps(body),
-    )
-    audio = bytearray()
-    pending = b""
-    stream = response["Body"]
-    try:
-        for part in stream:
-            if "PayloadPart" not in part:
-                raise RuntimeError(part)
-            pending += part["PayloadPart"]["Bytes"]
-            while b"\n" in pending:
-                line, pending = pending.split(b"\n", 1)
-                if not line.strip():
-                    continue
-                event = json.loads(line)
-                if event["type"] == "error":
-                    raise RuntimeError(event)
-                if event["type"] == "chunk":
-                    audio.extend(base64.b64decode(event["data"]))
-                elif event["type"] == "done":
-                    if not event.get("history"):
-                        raise RuntimeError("No continuation token returned")
-                    return bytes(audio), event["history"]
-    finally:
-        stream.close()
-    raise RuntimeError("Stream ended before the done event")
-
-
-audio_a, history = generate("The old lighthouse keeper climbed the stairs.")
-audio_b, history = generate("He lit the lamp as daylight faded.", history)
-Path("part-a.pcm").write_bytes(audio_a)
-Path("part-b.pcm").write_bytes(audio_b)
+```json
+{
+    "type": "done",
+    "history": "<returned-history-token>"
+}
 ```
+
+On the next request, keep the same voice and output settings, send only the next text segment, and add `history`. The changed fields are:
+
+```json
+{
+    "context_id": "part-2",
+    "transcript": "He lit the lamp as daylight faded.",
+    "history": "<returned-history-token>"
+}
+```
+
+Carry forward the newest token for each subsequent request using the same model and voice. Supplying `history` also requests a new token, so you can omit `include_history` on subsequent requests.
 
 ### Error Handling
 
