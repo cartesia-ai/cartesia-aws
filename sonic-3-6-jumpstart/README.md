@@ -53,8 +53,15 @@ The `pronunciation_map` parameter lets you override how specific words are spoke
     "context_id": "my-request-001",
     "transcript": "Welcome to Cartesia. Our Sonic 3.6 model delivers ultra-low latency TTS via the API.",
     "language": "en",
-    "voice": { "mode": "id", "id": "bf0a246a-8642-498a-9950-80c35e9276b5" },
-    "output_format": { "container": "raw", "sample_rate": 44100, "encoding": "pcm_f32le" },
+    "voice": {
+        "mode": "id",
+        "id": "bf0a246a-8642-498a-9950-80c35e9276b5"
+    },
+    "output_format": {
+        "container": "raw",
+        "sample_rate": 44100,
+        "encoding": "pcm_f32le"
+    },
     "pronunciation_map": {
         "Cartesia": "Car-TEE-zhuh",
         "Sonic": "SAH-nik",
@@ -168,9 +175,14 @@ def generate(transcript, history=None):
         "context_id": str(uuid.uuid4()),
         "transcript": transcript,
         "language": "en",
-        "voice": {"mode": "id", "id": os.environ["VOICE_ID"]},
+        "voice": {
+            "mode": "id",
+            "id": os.environ["VOICE_ID"],
+        },
         "output_format": {
-            "container": "raw", "encoding": "pcm_s16le", "sample_rate": 44100
+            "container": "raw",
+            "encoding": "pcm_s16le",
+            "sample_rate": 44100,
         },
         "include_history": True,
     }
