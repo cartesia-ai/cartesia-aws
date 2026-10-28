@@ -2,7 +2,7 @@
 
 ### Getting Started
 
-For a step by step guide to create your first Sonic 3.6 Inference endpoint on Sagemaker, please refer to [sample notebook](https://github.com/cartesia-ai/cartesia-aws/blob/main/sonic-3-5-jumpstart/Sonic-3-5-Jumpstart.ipynb)
+For a step by step guide to create your first Sonic 3.6 Inference endpoint on Sagemaker, please refer to [sample notebook](https://github.com/cartesia-ai/cartesia-aws/blob/main/sonic-3-6-jumpstart/Sonic-3-6-Jumpstart.ipynb)
 
 ### Inference Setup
 
@@ -26,6 +26,8 @@ The response streaming endpoint takes in a JSON object as the input that specifi
 | **add_phoneme_timestamps** | Whether to include phoneme-level timestamps in the output: https://docs.cartesia.ai/api-reference/tts/sse#body-add-phoneme-timestamps | `boolean` | ❌ No |
 | **use_normalized_timestamps** | Whether timestamps should be normalized (0–1 range): https://docs.cartesia.ai/api-reference/tts/sse#body-use-normalized-timestamps | `boolean` | ❌ No |
 | **pronunciation_map** | A dictionary mapping words or phrases to plain-text pronunciations: https://docs.cartesia.ai/build-with-cartesia/capability-guides/custom-pronunciations. Maximum total size: 16KB (sum of all key and value bytes in UTF-8). See [Pronunciation Dictionary](#pronunciation-dictionary) for details and examples. | `object` | ❌ No |
+| **include_history** | Return a continuation token in the final done event. Defaults to false. See [Continuations](#continuations). | `boolean` | ❌ No |
+| **history** | Token from the previous response, passed unchanged to continue speech with the same model and voice. | `string` | ❌ No |
 
 
 
@@ -51,8 +53,15 @@ The `pronunciation_map` parameter lets you override how specific words are spoke
     "context_id": "my-request-001",
     "transcript": "Welcome to Cartesia. Our Sonic 3.6 model delivers ultra-low latency TTS via the API.",
     "language": "en",
-    "voice": { "mode": "id", "id": "bf0a246a-8642-498a-9950-80c35e9276b5" },
-    "output_format": { "container": "raw", "sample_rate": 44100, "encoding": "pcm_f32le" },
+    "voice": {
+        "mode": "id",
+        "id": "bf0a246a-8642-498a-9950-80c35e9276b5"
+    },
+    "output_format": {
+        "container": "raw",
+        "sample_rate": 44100,
+        "encoding": "pcm_f32le"
+    },
     "pronunciation_map": {
         "Cartesia": "Car-TEE-zhuh",
         "Sonic": "SAH-nik",
@@ -102,7 +111,7 @@ A chunk event always contains at most 20 ms worth of audio chunk in the output f
 
 ##### Done Event
 
-A done event signals the completion of the generation. Done events are identified by `event.type == "done"` and `event.done == True`.
+A done event signals the completion of the generation. Done events are identified by `event.type == "done"` and `event.done == True`. When you request continuation history, this event also contains a `history` string. See [Continuations](#continuations).
 
 ##### Timestamp Event
 
@@ -127,6 +136,51 @@ A **phoneme timestamp event** provides timing data at the phoneme level, typical
 | **status_code** | Processing status code. | `int` | ✅ Yes |
 | **done** | Indicates whether this is the final phoneme timestamp event. | `bool` | ✅ Yes |
 | **phoneme_timestamps** | A dictionary containing phoneme-level timing information. | `dict<string, any>` | ✅ Yes |
+
+### Continuations
+
+Use the response-streaming endpoint to receive continuation history.
+
+Set `include_history` to `true` on your first request:
+
+```json
+{
+    "context_id": "part-1",
+    "transcript": "The old lighthouse keeper climbed the stairs.",
+    "language": "en",
+    "voice": {
+        "mode": "id",
+        "id": "bf0a246a-8642-498a-9950-80c35e9276b5"
+    },
+    "output_format": {
+        "container": "raw",
+        "encoding": "pcm_s16le",
+        "sample_rate": 44100
+    },
+    "include_history": true
+}
+```
+
+Read `history` from the final `done` event:
+
+```json
+{
+    "type": "done",
+    "history": "<returned-history-token>"
+}
+```
+
+On the next request, keep the same voice and output settings, send only the next text segment, and add `history`. The changed fields are:
+
+```json
+{
+    "context_id": "part-2",
+    "transcript": "He lit the lamp as daylight faded.",
+    "history": "<returned-history-token>"
+}
+```
+
+Carry forward the newest token for each subsequent request using the same model and voice. Supplying `history` also requests a new token, so you can omit `include_history` on subsequent requests.
 
 ### Error Handling
 
