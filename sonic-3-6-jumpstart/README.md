@@ -4,6 +4,12 @@
 
 For a step by step guide to create your first Sonic 3.6 Inference endpoint on Sagemaker, please refer to [sample notebook](https://github.com/cartesia-ai/cartesia-aws/blob/main/sonic-3-6-jumpstart/Sonic-3-6-Jumpstart.ipynb)
 
+### WebSocket API
+
+To send text a piece at a time and receive audio while you are still sending, for example from an LLM in a voice agent, use the WebSocket API. It runs over SageMaker bidirectional streaming and reports what each message is billed in `usage` events. See the [WebSocket guide](./WEBSOCKET.md) and the runnable [`websocket_example.py`](./websocket_example.py).
+
+The rest of this page covers the response streaming endpoint.
+
 ### Inference Setup
 
 Sonic 3.6 supports only real time inference on Sagemaker. Please select `ml.g6e.xlarge` as your inference endpoint instance type. Each instance is capable of serving 10 concurrent requests. In order to get the best performance, Sagemaker suggests that you reuse the client-to-SageMaker connection, as it can save the time to re-establish the connection. In boto3, you can configure max_pool_connections . Multiple requests will reuse the connections, which avoids the cost of establishing new TCP/TLS connections for each request.
