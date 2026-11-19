@@ -92,21 +92,23 @@ Each message is a JSON object. The first message of a context specifies the tran
 
 ### Input Parameters
 
-| **Parameter** | **Description** | **Type** | **Required** |
-|---------------|-----------------|-----------|---------------|
-| **context_id** | Identifies the context. Messages with the same ID are spoken as one utterance. Letters, digits, hyphens, underscores and colons only. | `string` | ✅ Yes |
-| **transcript** | The text to add to the context. Messages are joined exactly as written, so include the spaces and punctuation that belong between them. You can include additional controls (e.g., emotion, speed, volume) as supported by Sonic 3.6 models: https://docs.cartesia.ai/build-with-cartesia/sonic-3/volume-speed-emotion | `string` | ✅ First message |
-| **continue** | Set to `true` if more text will follow on this context. `false` ends the context after this message. Defaults to false. | `boolean` | ❌ No |
-| **flush** | Generate everything received so far now, without waiting for more text. Answered with a [flush done event](#flush-done-event) once that audio has been sent. | `boolean` | ❌ No |
-| **cancel** | Stop the context. Send it with only `context_id`. | `boolean` | ❌ No |
-| **max_buffer_delay_ms** | How long the model waits for more text before speaking an unfinished fragment. Text that completes a sentence is spoken right away. `0` to `5000`. Defaults to 3000. | `int` | ❌ No |
-| **voice** | Matches the `voice` field of the response streaming endpoint. Only **mode = `id`** is supported. Example: `{ "mode": "id", "id": "voice_123" }` | `object` | ✅ First message |
-| **output_format** | Matches the `output_format` field of the response streaming endpoint. Only `raw` is supported. | `object` | ✅ First message |
-| **language** | The language code of the transcript text. Supports the same codes as the response streaming endpoint. | `string` | ❌ No |
-| **generation_config** | Optional configuration object matching the API schema: https://docs.cartesia.ai/api-reference/tts/sse#body-generation-config | `object` | ❌ No |
-| **add_timestamps** | Whether to include word-level timestamps in the output. | `boolean` | ❌ No |
-| **use_normalized_timestamps** | Whether word timestamps should refer to the normalized text the model spoke rather than the text you sent. | `boolean` | ❌ No |
-| **pronunciation_map** | A dictionary mapping words or phrases to plain-text pronunciations. See [Pronunciation Dictionary](./README.md#pronunciation-dictionary). | `object` | ❌ No |
+
+| **Parameter**                 | **Description**                                                                                                                                                                                                                                                                                                                                                                                     | **Type**  | **Required**    |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------------- |
+| **context_id**                | Identifies the context. Messages with the same ID are spoken as one utterance. Letters, digits, hyphens, underscores and colons only.                                                                                                                                                                                                                                                               | `string`  | ✅ Yes           |
+| **transcript**                | The text to add to the context. Messages are joined exactly as written, so include the spaces and punctuation that belong between them. You can include additional controls (e.g., emotion, speed, volume) as supported by Sonic 3.6 models: [https://docs.cartesia.ai/build-with-cartesia/sonic-3/volume-speed-emotion](https://docs.cartesia.ai/build-with-cartesia/sonic-3/volume-speed-emotion) | `string`  | ✅ First message |
+| **continue**                  | Set to `true` if more text will follow on this context. `false` ends the context after this message. Defaults to false.                                                                                                                                                                                                                                                                             | `boolean` | ❌ No            |
+| **flush**                     | Generate everything received so far now, without waiting for more text. Answered with a [flush done event](#flush-done-event) once that audio has been sent.                                                                                                                                                                                                                                        | `boolean` | ❌ No            |
+| **cancel**                    | Stop the context. Send it with only `context_id`.                                                                                                                                                                                                                                                                                                                                                   | `boolean` | ❌ No            |
+| **max_buffer_delay_ms**       | How long the model waits for more text before speaking an unfinished fragment. Text that completes a sentence is spoken right away. `0` to `5000`. Defaults to 3000.                                                                                                                                                                                                                                | `int`     | ❌ No            |
+| **voice**                     | Matches the `voice` field of the response streaming endpoint. Only **mode = `id`** is supported. Example: `{ "mode": "id", "id": "voice_123" }`                                                                                                                                                                                                                                                     | `object`  | ✅ First message |
+| **output_format**             | Matches the `output_format` field of the response streaming endpoint. Only `raw` is supported.                                                                                                                                                                                                                                                                                                      | `object`  | ✅ First message |
+| **language**                  | The language code of the transcript text. Supports the same codes as the response streaming endpoint.                                                                                                                                                                                                                                                                                               | `string`  | ❌ No            |
+| **generation_config**         | Optional configuration object matching the API schema: [https://docs.cartesia.ai/api-reference/tts/sse#body-generation-config](https://docs.cartesia.ai/api-reference/tts/sse#body-generation-config)                                                                                                                                                                                               | `object`  | ❌ No            |
+| **add_timestamps**            | Whether to include word-level timestamps in the output.                                                                                                                                                                                                                                                                                                                                             | `boolean` | ❌ No            |
+| **use_normalized_timestamps** | Whether word timestamps should refer to the normalized text the model spoke rather than the text you sent.                                                                                                                                                                                                                                                                                          | `boolean` | ❌ No            |
+| **pronunciation_map**         | A dictionary mapping words or phrases to plain-text pronunciations. See [Pronunciation Dictionary](./README.md#pronunciation-dictionary).                                                                                                                                                                                                                                                           | `object`  | ❌ No            |
+
 
 `output_format`, `add_timestamps`, `use_normalized_timestamps` and `pronunciation_map` are fixed by the first message of a context. Start a new context to change them.
 
@@ -176,67 +178,77 @@ SageMaker sends back the response events as payload parts on the stream. Each pa
 
 A usage event reports what a message is billed. It is sent for every accepted message that carries text, before any audio for that message. See [Usage and Billing](#usage-and-billing).
 
-| **Parameter** | **Description** | **Type** | **Required** |
-|----------------|-----------------|-----------|---------------|
-| **type** | The type of response event. For usage events, this value is always `"usage"`. | `string` | ✅ Yes |
-| **context_id** | The context the message was sent on. | `string` | ✅ Yes |
-| **status_code** | Always `200`. | `int` | ✅ Yes |
-| **done** | Always `false`. | `bool` | ✅ Yes |
-| **characters_billed** | Characters billed for the message you just sent. | `int` | ✅ Yes |
-| **context_characters_billed** | Running total for the context, including this message. | `int` | ✅ Yes |
+
+| **Parameter**                 | **Description**                                                               | **Type** | **Required** |
+| ----------------------------- | ----------------------------------------------------------------------------- | -------- | ------------ |
+| **type**                      | The type of response event. For usage events, this value is always `"usage"`. | `string` | ✅ Yes        |
+| **context_id**                | The context the message was sent on.                                          | `string` | ✅ Yes        |
+| **status_code**               | Always `200`.                                                                 | `int`    | ✅ Yes        |
+| **done**                      | Always `false`.                                                               | `bool`   | ✅ Yes        |
+| **characters_billed**         | Characters billed for the message you just sent.                              | `int`    | ✅ Yes        |
+| **context_characters_billed** | Running total for the context, including this message.                        | `int`    | ✅ Yes        |
+
 
 ##### Chunk Event
 
 A chunk event contains a chunk of audio in the output format and sample rate you specified. To build the audio, decode and concatenate the `data` of a context's chunk events in the order received.
 
-| **Parameter** | **Description** | **Type** | **Required** |
-|----------------|-----------------|-----------|---------------|
-| **type** | The type of response event. For chunk events, this value is always `"chunk"`. | `string` | ✅ Yes |
-| **context_id** | The context this audio belongs to. | `string` | ✅ Yes |
-| **status_code** | The HTTP-like status code of the event. `206` for chunk events. | `int` | ✅ Yes |
-| **done** | Always `false`. The end of a context is signalled by a done event. | `bool` | ✅ Yes |
-| **data** | The base 64 encoded chunk of audio data. | `string` | ✅ Yes |
-| **sampling_rate** | The sampling rate (in Hz) of the audio data in this chunk (e.g., `44100` or `8000`). | `int` | ✅ Yes |
-| **step_time** | The time (in milliseconds) the model spent generating this chunk, useful for latency tracking. | `float` | ✅ Yes |
-| **flush_id** | Which flush this audio belongs to. Starts at `0` and goes up by one after each flush. | `int` | ✅ Yes |
+
+| **Parameter**     | **Description**                                                                                | **Type** | **Required** |
+| ----------------- | ---------------------------------------------------------------------------------------------- | -------- | ------------ |
+| **type**          | The type of response event. For chunk events, this value is always `"chunk"`.                  | `string` | ✅ Yes        |
+| **context_id**    | The context this audio belongs to.                                                             | `string` | ✅ Yes        |
+| **status_code**   | The HTTP-like status code of the event. `206` for chunk events.                                | `int`    | ✅ Yes        |
+| **done**          | Always `false`. The end of a context is signalled by a done event.                             | `bool`   | ✅ Yes        |
+| **data**          | The base 64 encoded chunk of audio data.                                                       | `string` | ✅ Yes        |
+| **sampling_rate** | The sampling rate (in Hz) of the audio data in this chunk (e.g., `44100` or `8000`).           | `int`    | ✅ Yes        |
+| **step_time**     | The time (in milliseconds) the model spent generating this chunk, useful for latency tracking. | `float`  | ✅ Yes        |
+| **flush_id**      | Which flush this audio belongs to. Starts at `0` and goes up by one after each flush.          | `int`    | ✅ Yes        |
+
 
 ##### Timestamp Event
 
 A **timestamp event** provides word timings, when `add_timestamps` is set.
 
-| **Parameter** | **Description** | **Type** | **Required** |
-|--------------|-----------------|----------|--------------|
-| **type** | The response type. Always `"timestamps"`. | `string` | ✅ Yes |
-| **context_id** | The context these timestamps belong to. | `string` | ✅ Yes |
-| **status_code** | Status code of the event. `206` for timestamp events. | `int` | ✅ Yes |
-| **done** | Always `false`. | `bool` | ✅ Yes |
-| **word_timestamps** | Three lists of equal length: `words`, and the `start` and `end` time of each word in seconds from the start of the context's audio. | `dict<string, any>` | ✅ Yes |
+
+| **Parameter**       | **Description**                                                                                                                     | **Type**            | **Required** |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------------ |
+| **type**            | The response type. Always `"timestamps"`.                                                                                           | `string`            | ✅ Yes        |
+| **context_id**      | The context these timestamps belong to.                                                                                             | `string`            | ✅ Yes        |
+| **status_code**     | Status code of the event. `206` for timestamp events.                                                                               | `int`               | ✅ Yes        |
+| **done**            | Always `false`.                                                                                                                     | `bool`              | ✅ Yes        |
+| **word_timestamps** | Three lists of equal length: `words`, and the `start` and `end` time of each word in seconds from the start of the context's audio. | `dict<string, any>` | ✅ Yes        |
+
 
 ##### Flush Done Event
 
 A **flush done event** signals that all audio for one flush has been sent.
 
-| **Parameter** | **Description** | **Type** | **Required** |
-|--------------|-----------------|----------|--------------|
-| **type** | The response type. Always `"flush_done"`. | `string` | ✅ Yes |
-| **context_id** | The context that was flushed. | `string` | ✅ Yes |
-| **status_code** | Status code of the event. `206` for flush done events. | `int` | ✅ Yes |
-| **done** | Always `false`. The context stays open after a flush. | `bool` | ✅ Yes |
-| **flush_id** | The `flush_id` carried by the chunk events of this flush. | `int` | ✅ Yes |
-| **flush_done** | Always `true`. | `bool` | ✅ Yes |
+
+| **Parameter**   | **Description**                                           | **Type** | **Required** |
+| --------------- | --------------------------------------------------------- | -------- | ------------ |
+| **type**        | The response type. Always `"flush_done"`.                 | `string` | ✅ Yes        |
+| **context_id**  | The context that was flushed.                             | `string` | ✅ Yes        |
+| **status_code** | Status code of the event. `206` for flush done events.    | `int`    | ✅ Yes        |
+| **done**        | Always `false`. The context stays open after a flush.     | `bool`   | ✅ Yes        |
+| **flush_id**    | The `flush_id` carried by the chunk events of this flush. | `int`    | ✅ Yes        |
+| **flush_done**  | Always `true`.                                            | `bool`   | ✅ Yes        |
+
 
 ##### Done Event
 
 A done event signals that a context has ended. No more events will carry its `context_id`. Done events are identified by `event.type == "done"` and `event.done == True`.
 
-| **Parameter** | **Description** | **Type** | **Required** |
-|--------------|-----------------|----------|--------------|
-| **type** | The response type. Always `"done"`. | `string` | ✅ Yes |
-| **context_id** | The context that ended. | `string` | ✅ Yes |
-| **status_code** | Always `200`. | `int` | ✅ Yes |
-| **done** | Always `true`. | `bool` | ✅ Yes |
-| **cancelled** | `true` if the context ended because you cancelled it. | `bool` | ✅ Yes |
-| **server_metrics** | Totals for the context: `characters_billed`, `audio_duration_s`, and latency measurements taken on the endpoint. | `dict<string, any>` | ✅ Yes |
+
+| **Parameter**      | **Description**                                                                                                  | **Type**            | **Required** |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------- | ------------ |
+| **type**           | The response type. Always `"done"`.                                                                              | `string`            | ✅ Yes        |
+| **context_id**     | The context that ended.                                                                                          | `string`            | ✅ Yes        |
+| **status_code**    | Always `200`.                                                                                                    | `int`               | ✅ Yes        |
+| **done**           | Always `true`.                                                                                                   | `bool`              | ✅ Yes        |
+| **cancelled**      | `true` if the context ended because you cancelled it.                                                            | `bool`              | ✅ Yes        |
+| **server_metrics** | Totals for the context: `characters_billed`, `audio_duration_s`, and latency measurements taken on the endpoint. | `dict<string, any>` | ✅ Yes        |
+
 
 ##### Event Sample
 
@@ -254,7 +266,7 @@ A context that sends two messages, with a flush after the first, produces the fo
 
 ### Usage and Billing
 
-The endpoint bills by character at the same rate as the response streaming endpoint. One inference unit is 1,000 characters, and units are fractional, so 112 characters is 0.112 units.
+The endpoint bills by character at the same rate as the response streaming endpoint (see [Usage and Billing](./README.md#usage-and-billing) in the README). One inference unit is 1,000 characters, and units are fractional, so 112 characters is 0.112 units.
 
 To track usage yourself, add up `characters_billed` across the [usage events](#usage-event) you receive and divide by 1,000:
 
@@ -268,30 +280,21 @@ async for event in events(output_stream):
 inference_units = characters_billed / 1000
 ```
 
-- **Text is billed when it is accepted.** The usage event is sent at that point, ahead of the audio. Cancelling a context, closing the connection, or a context failing afterwards does not refund text already accepted.
-- **Messages that are not accepted are not billed.** A message answered with an error and no usage event was not billed.
-- **Messages without text are not billed.** A flush or a cancel produces no usage event.
-- **The count is of spoken characters.** `<speed/>`, `<volume/>` and `<emotion/>` tags are not counted. Where a `pronunciation_map` entry matches, the replacement text is counted.
 - **The done event repeats the total.** `server_metrics.characters_billed` on a context's done event equals the sum of its usage events.
-
-On the response streaming endpoint there are no usage events. The same count comes back once per request, in the response's `CustomAttributes`:
-
-```python
-response = sagemaker_runtime.invoke_endpoint_with_response_stream(...)
-json.loads(response["CustomAttributes"])  # {"characters_billed": 12, "model_id": "sonic-3.6"}
-```
 
 ### Error Handling
 
 If an error occurs on a context, the endpoint sends back an error event. An error ends that context only: other contexts on the stream keep running and you can start new ones.
 
-| **Parameter** | **Description** | **Type** | **Required** |
-|--------------|-----------------|----------|--------------|
-| **type** | The response type. Always `"error"`. | `string` | ✅ Yes |
-| **context_id** | The context that failed. `null` when the message could not be read. | `string` | ❌ No |
-| **status_code** | The HTTP-like status code of the error. | `int` | ✅ Yes |
-| **done** | Always `true`. | `bool` | ✅ Yes |
-| **error** | A description of the error. | `string` | ✅ Yes |
+
+| **Parameter**   | **Description**                                                     | **Type** | **Required** |
+| --------------- | ------------------------------------------------------------------- | -------- | ------------ |
+| **type**        | The response type. Always `"error"`.                                | `string` | ✅ Yes        |
+| **context_id**  | The context that failed. `null` when the message could not be read. | `string` | ❌ No         |
+| **status_code** | The HTTP-like status code of the error.                             | `int`    | ✅ Yes        |
+| **done**        | Always `true`.                                                      | `bool`   | ✅ Yes        |
+| **error**       | A description of the error.                                         | `string` | ✅ Yes        |
+
 
 ```json
 {

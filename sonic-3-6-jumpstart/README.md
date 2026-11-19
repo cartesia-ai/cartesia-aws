@@ -188,6 +188,19 @@ On the next request, keep the same voice and output settings, send only the next
 
 Carry forward the newest token for each subsequent request using the same model and voice. Supplying `history` also requests a new token, so you can omit `include_history` on subsequent requests.
 
+### Usage and Billing
+
+The endpoint bills by character. One inference unit is 1,000 characters, and units are fractional, so 112 characters is 0.112 units.
+
+Each response from the response streaming endpoint reports the characters billed for that request in its `CustomAttributes`:
+
+```python
+response = sagemaker_runtime.invoke_endpoint_with_response_stream(...)
+json.loads(response["CustomAttributes"])  # {"characters_billed": 12, "model_id": "sonic-3.6"}
+```
+
+To track usage yourself, add up `characters_billed` across your requests and divide by 1,000. On the WebSocket API the count arrives in usage events instead; see [Usage and Billing](./WEBSOCKET.md#usage-and-billing) in the WebSocket guide.
+
 ### Error Handling
 
 If an error occurs during the generation type, Sagemaker will send back the error as a [Model Error](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_runtime_InvokeEndpoint.html#API_runtime_InvokeEndpoint_ResponseElements:~:text=Status%20Code%3A%20500-,ModelError,-Model%20(owned%20by)). To handle the error, you may inspect the `OriginalStatusCode` field of the error object (See examples for error handling in python).
