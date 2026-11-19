@@ -4,6 +4,12 @@
 
 For a step by step guide to create your first Sonic 3.6 Inference endpoint on Sagemaker, please refer to [sample notebook](https://github.com/cartesia-ai/cartesia-aws/blob/main/sonic-3-6-jumpstart/Sonic-3-6-Jumpstart.ipynb)
 
+### WebSocket API
+
+To send text a piece at a time and receive audio while you are still sending, for example from an LLM in a voice agent, use the WebSocket API. It runs over SageMaker bidirectional streaming and reports what each message is billed in `usage` events. See the [WebSocket guide](./WEBSOCKET.md) and the runnable [`websocket_example.py`](./websocket_example.py).
+
+The rest of this page covers the response streaming endpoint.
+
 ### Inference Setup
 
 Sonic 3.6 supports only real time inference on Sagemaker. Please select `ml.g6e.xlarge` as your inference endpoint instance type. Each instance is capable of serving 10 concurrent requests. In order to get the best performance, Sagemaker suggests that you reuse the client-to-SageMaker connection, as it can save the time to re-establish the connection. In boto3, you can configure max_pool_connections . Multiple requests will reuse the connections, which avoids the cost of establishing new TCP/TLS connections for each request.
@@ -181,6 +187,19 @@ On the next request, keep the same voice and output settings, send only the next
 ```
 
 Carry forward the newest token for each subsequent request using the same model and voice. Supplying `history` also requests a new token, so you can omit `include_history` on subsequent requests.
+
+### Usage and Billing
+
+The endpoint bills by character. One inference unit is 1,000 characters, and units are fractional, so 112 characters is 0.112 units.
+
+Each response from the response streaming endpoint reports the characters billed for that request in its `CustomAttributes`:
+
+```python
+response = sagemaker_runtime.invoke_endpoint_with_response_stream(...)
+json.loads(response["CustomAttributes"])  # {"characters_billed": 12, "model_id": "sonic-3.6"}
+```
+
+To track usage yourself, add up `characters_billed` across your requests and divide by 1,000. On the WebSocket API the count arrives in usage events instead; see [Usage and Billing](./WEBSOCKET.md#usage-and-billing) in the WebSocket guide.
 
 ### Error Handling
 
