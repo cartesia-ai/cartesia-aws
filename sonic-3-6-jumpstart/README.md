@@ -205,9 +205,9 @@ To track usage yourself, add up `characters_billed` across your requests and div
 
 If an error occurs during the generation type, Sagemaker will send back the error as a [Model Error](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_runtime_InvokeEndpoint.html#API_runtime_InvokeEndpoint_ResponseElements:~:text=Status%20Code%3A%20500-,ModelError,-Model%20(owned%20by)). To handle the error, you may inspect the `OriginalStatusCode` field of the error object (See examples for error handling in python).
 
-#### 422 Errors
+#### 400 Errors
 
-A 422 error indicates that your input is not of the correct format. You may see more details in the `Messsage` field.
+A 400 error indicates that your input is not of the correct format. You may see more details in the `Message` field.
 
 #### 429 Errors
 
