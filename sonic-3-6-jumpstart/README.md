@@ -6,7 +6,7 @@ For a step by step guide to create your first Sonic 3.6 Inference endpoint on Sa
 
 ### WebSocket API
 
-To send text a piece at a time and receive audio while you are still sending, for example from an LLM in a voice agent, use the WebSocket API. It runs over SageMaker bidirectional streaming and reports what each message is billed in `usage` events. See the [WebSocket guide](./WEBSOCKET.md) and the runnable [`websocket_example.py`](./websocket_example.py).
+To send a transcript in chunks and receive audio while you are still sending, use the WebSocket API. This is most common when streaming the output of an LLM into speech, as in a voice agent. It runs over SageMaker bidirectional streaming and reports what each message is billed in `usage` events. See the [WebSocket guide](./WEBSOCKET.md) and the runnable [`websocket_example.py`](./websocket_example.py).
 
 The rest of this page covers the response streaming endpoint.
 

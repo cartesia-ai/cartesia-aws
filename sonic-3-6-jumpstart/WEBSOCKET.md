@@ -1,6 +1,6 @@
 # Sonic 3.6 WebSocket API on SageMaker JumpStart
 
-The WebSocket API lets you send text to a Sonic 3.6 endpoint a piece at a time and receive audio while you are still sending. Use it when your text arrives incrementally, for example from an LLM in a voice agent, and you want it spoken as one continuous utterance.
+The WebSocket API lets you send a transcript to a Sonic 3.6 endpoint in chunks and receive audio while you are still sending. This is most common when streaming the output of an LLM into speech, as in a voice agent: the chunks arrive as the LLM produces them and are spoken as one continuous utterance.
 
 When the full text is known up front, the response streaming endpoint described in the [README](./README.md) is simpler.
 
